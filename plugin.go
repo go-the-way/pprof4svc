@@ -89,5 +89,5 @@ func randPrefix() string {
 		}
 		return
 	}
-	return rand0(40)
+	return "/" + rand0(40)
 }
