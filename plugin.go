@@ -12,7 +12,6 @@
 package pprof4svc
 
 import (
-	"crypto/md5"
 	"fmt"
 	"math/rand"
 	"net/http"
@@ -22,8 +21,6 @@ import (
 )
 
 const (
-	token = "6A8955kTCW6PaIPQ4P_turboVjkYeZakDNmfATsvFIgGFPDZ"
-
 	pprofIndexRoute   = "/debug/pprof/"
 	pprofNameRoute    = "/debug/pprof/:name"
 	pprofCmdlineRoute = "/debug/pprof/cmdline"
@@ -43,11 +40,10 @@ type plugin struct {
 	pprofTrace        string
 }
 
-func DefaultPlugin() *plugin                     { return Plugin(pprofIndexRoute, token) }
-func PluginEntrypoint(entrypoint string) *plugin { return Plugin(entrypoint, token) }
-func PluginToken(token string) *plugin           { return Plugin(pprofIndexRoute, token) }
+func DefaultPlugin(token string) *plugin { return Plugin(pprofIndexRoute, token) }
+
 func Plugin(entrypoint, token string) *plugin {
-	prefix := "/" + prefix0()
+	prefix := randPrefix()
 	return &plugin{
 		entrypoint:   entrypoint,
 		token:        token,
@@ -85,10 +81,13 @@ func (p *plugin) handler(ctx *gin.Context) {
 	ctx.Redirect(http.StatusMovedPermanently, p.pprofIndex)
 }
 
-func prefix0() string { return md5Str(fmt.Sprintf("%x-%x", rand.Int63(), rand.Float64())) }
-
-func md5Str(str string) string {
-	hash := md5.New()
-	_, _ = hash.Write([]byte(str))
-	return fmt.Sprintf("%x", hash.Sum(nil))
+func randPrefix() string {
+	rand0 := func(len0 int) (str string) {
+		chars := "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_"
+		for i := 0; i < len0; i++ {
+			str += fmt.Sprintf("%c", chars[rand.Intn(len(chars))])
+		}
+		return
+	}
+	return rand0(40)
 }
